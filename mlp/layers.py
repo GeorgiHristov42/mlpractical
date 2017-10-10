@@ -28,7 +28,9 @@ class Layer(object):
         Returns:
             outputs: Array of layer outputs of shape (batch_size, output_dim).
         """
-        raise NotImplementedError()
+        y = np.dot(inputs,weights.T) + biases
+    
+        return y
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
         """Back propagates gradients through a layer.
@@ -66,7 +68,11 @@ class LayerWithParameters(Layer):
             with parameter gradients appearing in same order in tuple as
             returned from `get_params` method.
         """
-        raise NotImplementedError()
+        grads_wrt_weights = grads_wrt_outputs.T.dot(inputs)
+        grads_wrt_biases = grads_wrt_outputs.sum(axis=0)
+        grads_wrt_params = [grads_wrt_weights,grads_wrt_biases]
+    
+        return grads_wrt_params
 
     @property
     def params(self):
@@ -113,7 +119,9 @@ class AffineLayer(LayerWithParameters):
         Returns:
             outputs: Array of layer outputs of shape (batch_size, output_dim).
         """
-        raise NotImplementedError()
+        y = np.dot(inputs,self.weights.T) + self.biases
+    
+        return y
 
     def grads_wrt_params(self, inputs, grads_wrt_outputs):
         """Calculates gradients with respect to layer parameters.
@@ -127,7 +135,11 @@ class AffineLayer(LayerWithParameters):
             list of arrays of gradients with respect to the layer parameters
             `[grads_wrt_weights, grads_wrt_biases]`.
         """
-        raise NotImplementedError()
+        grads_wrt_weights = grads_wrt_outputs.T.dot(inputs)
+        grads_wrt_biases = grads_wrt_outputs.sum(axis=0)
+        grads_wrt_params = [grads_wrt_weights,grads_wrt_biases]
+    
+        return grads_wrt_params
 
     @property
     def params(self):
