@@ -326,7 +326,6 @@ class LeakyReluLayer(Layer):
         cond = inputs > 0
         a = 0.01
         outputs = inputs*cond + a*inputs*~cond
-        print(outputs)
         return outputs
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
