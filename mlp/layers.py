@@ -357,8 +357,11 @@ class BatchNormalizationLayer(StochasticLayerWithParameters):
 
     def fprop(self, inputs, stochastic=True):
         """Forward propagates inputs through a layer."""
-
-        raise NotImplementedError
+        
+        u = inputs - np.mean(inputs,axis=0)     
+        u /= np.sqrt(np.var(inputs,axis=0) + self.epsilon)
+        
+        return (u * self.gamma + self.beta)
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
         """Back propagates gradients through a layer.
@@ -377,8 +380,36 @@ class BatchNormalizationLayer(StochasticLayerWithParameters):
             Array of gradients with respect to the layer inputs of shape
             (batch_size, input_dim).
         """
+        mean = np.mean(inputs,axis=0)
+        var = np.var(inputs,axis=0)  
+        
+        batch_size = inputs.shape[0]
+        
+        #u_grad = grads_wrt_outputs * self.gamma
+        
+        #grads_wrt_std = (np.sum((u_grad * u), axis=0) * (-0.5) / np.sqrt((var + self.epsilon)**3))
+        
+        #grads_wrt_mean = np.sum(u_grad / np.sqrt(var + self.epsilon),axis=0)
+        #grads_wrt_mean += (grads_wrt_std * (np.sum(-2*u,axis=0)) / batch_size)
+    
+        #grads_wrt_inputs = u_grad / np.sqrt(var+self.epsilon)
+        #grads_wrt_inputs += grads_wrt_std * (2*u/batch_size)
+        #grads_wrt_inputs += grads_wrt_mean / batch_size
+        
+        
+                
+        u_grad = grads_wrt_outputs * self.gamma
+        
+        grads_wrt_std = np.sum(u_grad * (inputs - mean), axis=0) * (-0.5 / np.sqrt(var + self.epsilon)**3)
+        
+        grads_wrt_mean = np.sum(u_grad / (-np.sqrt(var + self.epsilon)),axis=0)
+        grads_wrt_mean += (grads_wrt_std * (np.sum(-2*(inputs - mean),axis=0)) / batch_size)
+    
+        grads_wrt_inputs = u_grad / np.sqrt(var+self.epsilon)
+        grads_wrt_inputs += grads_wrt_std * (2*(inputs - mean)/batch_size)
+        grads_wrt_inputs += grads_wrt_mean / batch_size
 
-        raise NotImplementedError
+        return grads_wrt_inputs
 
     def grads_wrt_params(self, inputs, grads_wrt_outputs):
         """Calculates gradients with respect to layer parameters.
@@ -392,7 +423,14 @@ class BatchNormalizationLayer(StochasticLayerWithParameters):
             list of arrays of gradients with respect to the layer parameters
             `[grads_wrt_weights, grads_wrt_biases]`.
         """
-        raise NotImplementedError
+                
+        u = inputs - np.mean(inputs,axis=0)     
+        u /= np.sqrt(np.var(inputs,axis=0) + self.epsilon)
+        
+        grads_wrt_weights = np.sum(grads_wrt_outputs * u, axis=0)
+        grads_wrt_biases = np.sum(grads_wrt_outputs, axis=0)
+        
+        return [grads_wrt_weights,grads_wrt_biases]
 
     def params_penalty(self):
         """Returns the parameter dependent penalty term for this layer.
@@ -414,7 +452,7 @@ class BatchNormalizationLayer(StochasticLayerWithParameters):
         self.beta = values[1]
 
     def __repr__(self):
-        return 'BatchNormalizationLayer(input_dim={0})'.format(
+        return 'NormalizationLayer(input_dim={0})'.format(
             self.input_dim)
 
 
