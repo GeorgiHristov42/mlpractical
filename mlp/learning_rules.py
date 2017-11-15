@@ -160,3 +160,72 @@ class MomentumLearningRule(GradientDescentLearningRule):
             mom *= self.mom_coeff
             mom -= self.learning_rate * grad
             param += mom
+
+            
+class RMSProp(GradientDescentLearningRule):
+    """Gradient descent with momentum learning rule.
+
+
+    """
+
+    def __init__(self, learning_rate=1e-3, decay_rate=0.9):
+        """Creates a new learning rule object.
+
+        Args:
+            learning_rate: A postive scalar to scale gradient updates to the
+                parameters by. This needs to be carefully set - if too large
+                the learning dynamic will be unstable and may diverge, while
+                if set too small learning will proceed very slowly.
+            mom_coeff: A scalar in the range [0, 1] inclusive.
+
+        """
+        super(RMSProp, self).__init__(learning_rate)
+        assert decay_rate >= 0. and decay_rate <= 1., (
+            'decay_rate should be in the range [0, 1].'
+        )
+        self.decay_rate = decay_rate
+
+    def initialise(self, params):
+        """Initialises the state of the learning rule for a set or parameters.
+
+        This must be called before `update_params` is first called.
+
+        Args:
+            params: A list of the parameters to be optimised. Note these will
+                be updated *in-place* to avoid reallocating arrays on each
+                update.
+        """
+        super(RMSProp, self).initialise(params)
+        self.cache = []
+        for param in self.params:
+            self.cache.append(np.zeros_like(param))
+        
+
+    def reset(self):
+        """Resets any additional state variables to their intial values.
+
+        For this learning rule this corresponds to zeroing all the momenta.
+        """
+        for s in zip(self.cache):
+            s *= 0.
+
+    def update_params(self, grads_wrt_params):
+        """Applies a single update to all parameters.
+
+        All parameter updates are performed using in-place operations and so
+        nothing is returned.
+
+        Args:
+            grads_wrt_params: A list of gradients of the scalar loss function
+                with respect to each of the parameters passed to `initialise`
+                previously, with this list expected to be in the same order.
+        """
+        
+        eps = 1e-8
+        for param, s, grad in zip(self.params, self.cache, grads_wrt_params):
+            #s = self.decay_rate * s + (1 - self.decay_rate) * (grad**2)
+            #param += - self.learning_rate * grad / (np.sqrt(s) + eps)
+            
+            s *= self.decay_rate
+            s += (1-self.decay_rate) * (grad**2)
+            param += -(self.learning_rate *grad)/(np.sqrt(s) + eps)
