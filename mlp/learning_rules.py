@@ -162,7 +162,7 @@ class MomentumLearningRule(GradientDescentLearningRule):
             param += mom
 
             
-class RMSProp(GradientDescentLearningRule):
+class RMSPropLearningRule(GradientDescentLearningRule):
     """Gradient descent with momentum learning rule.
 
 
@@ -179,11 +179,12 @@ class RMSProp(GradientDescentLearningRule):
             mom_coeff: A scalar in the range [0, 1] inclusive.
 
         """
-        super(RMSProp, self).__init__(learning_rate)
+        super(RMSPropLearningRule,self).__init__(learning_rate)
         assert decay_rate >= 0. and decay_rate <= 1., (
             'decay_rate should be in the range [0, 1].'
         )
         self.decay_rate = decay_rate
+        self.eps = 1e-8
 
     def initialise(self, params):
         """Initialises the state of the learning rule for a set or parameters.
@@ -195,7 +196,7 @@ class RMSProp(GradientDescentLearningRule):
                 be updated *in-place* to avoid reallocating arrays on each
                 update.
         """
-        super(RMSProp, self).initialise(params)
+        super(RMSPropLearningRule, self).initialise(params)
         self.cache = []
         for param in self.params:
             self.cache.append(np.zeros_like(param))
@@ -221,11 +222,172 @@ class RMSProp(GradientDescentLearningRule):
                 previously, with this list expected to be in the same order.
         """
         
-        eps = 1e-8
         for param, s, grad in zip(self.params, self.cache, grads_wrt_params):
+            
+            #TODO: figure out why this doesn't work in Python
             #s = self.decay_rate * s + (1 - self.decay_rate) * (grad**2)
             #param += - self.learning_rate * grad / (np.sqrt(s) + eps)
             
             s *= self.decay_rate
             s += (1-self.decay_rate) * (grad**2)
-            param += -(self.learning_rate *grad)/(np.sqrt(s) + eps)
+            param += -(self.learning_rate *grad)/(np.sqrt(s) + self.eps)
+
+class AdamSimpleLearningRule(GradientDescentLearningRule):
+    """Gradient descent with momentum learning rule.
+
+
+    """
+
+    def __init__(self, learning_rate=1e-3, alpha=0.9, beta=0.999):
+        """Creates a new learning rule object.
+
+        Args:
+            learning_rate: A postive scalar to scale gradient updates to the
+                parameters by. This needs to be carefully set - if too large
+                the learning dynamic will be unstable and may diverge, while
+                if set too small learning will proceed very slowly.
+            mom_coeff: A scalar in the range [0, 1] inclusive.
+
+        """
+        super(AdamSimpleLearningRule, self).__init__(learning_rate)
+        assert alpha >= 0. and alpha <= 1., (
+            'alpha should be in the range [0, 1].'
+        )
+        assert beta >= 0. and beta <= 1., (
+            'beta should be in the range [0, 1].'
+        )
+        self.eps = 1e-8
+        self.alpha = alpha
+        self.beta = beta
+
+    def initialise(self, params):
+        """Initialises the state of the learning rule for a set or parameters.
+
+        This must be called before `update_params` is first called.
+
+        Args:
+            params: A list of the parameters to be optimised. Note these will
+                be updated *in-place* to avoid reallocating arrays on each
+                update.
+        """
+        super(AdamSimpleLearningRule, self).initialise(params)
+        
+        self.cache_M = []
+        self.cache_S = []
+        for param in self.params:
+            self.cache_M.append(np.zeros_like(param))
+            self.cache_S.append(np.zeros_like(param))
+        
+
+    def reset(self):
+        """Resets any additional state variables to their intial values.
+
+        For this learning rule this corresponds to zeroing all the momenta.
+        """
+        for s in zip(self.cache_S):
+            s *= 0.
+        for m in zip(self.cache_M):
+            m *= 0.
+
+    def update_params(self, grads_wrt_params):
+        """Applies a single update to all parameters.
+
+        All parameter updates are performed using in-place operations and so
+        nothing is returned.
+
+        Args:
+            grads_wrt_params: A list of gradients of the scalar loss function
+                with respect to each of the parameters passed to `initialise`
+                previously, with this list expected to be in the same order.
+        """
+        
+        for param, m, s, grad in zip(self.params, self.cache_M, self.cache_S, grads_wrt_params):             
+                       
+            m *= self.alpha
+            m += ( 1 - self.alpha) * grad
+            s *= self.beta
+            s += (1-self.beta) * (grad**2)
+            param += -(self.learning_rate * m)/(np.sqrt(s) + self.eps)
+            
+class AdamComplexLearningRule(GradientDescentLearningRule):
+    """Gradient descent with momentum learning rule.
+
+
+    """
+
+    def __init__(self, learning_rate=1e-3, alpha=0.9, beta=0.999):
+        """Creates a new learning rule object.
+
+        Args:
+            learning_rate: A postive scalar to scale gradient updates to the
+                parameters by. This needs to be carefully set - if too large
+                the learning dynamic will be unstable and may diverge, while
+                if set too small learning will proceed very slowly.
+            mom_coeff: A scalar in the range [0, 1] inclusive.
+
+        """
+        super(AdamComplexLearningRule, self).__init__(learning_rate)
+        assert alpha >= 0. and alpha <= 1., (
+            'alpha should be in the range [0, 1].'
+        )
+        assert beta >= 0. and beta <= 1., (
+            'beta should be in the range [0, 1].'
+        )
+        self.eps = 1e-8
+        self.alpha = alpha
+        self.beta = beta
+        self.t = 0
+
+    def initialise(self, params):
+        """Initialises the state of the learning rule for a set or parameters.
+
+        This must be called before `update_params` is first called.
+
+        Args:
+            params: A list of the parameters to be optimised. Note these will
+                be updated *in-place* to avoid reallocating arrays on each
+                update.
+        """
+        super(AdamComplexLearningRule, self).initialise(params)
+        
+        self.cache_M = []
+        self.cache_S = []
+        for param in self.params:
+            self.cache_M.append(np.zeros_like(param))
+            self.cache_S.append(np.zeros_like(param))
+        
+
+    def reset(self):
+        """Resets any additional state variables to their intial values.
+
+        For this learning rule this corresponds to zeroing all the momenta.
+        """
+        for s in zip(self.cache_S):
+            s *= 0.
+        for m in zip(self.cache_M):
+            m *= 0.
+        self.t = 0
+
+    def update_params(self, grads_wrt_params):
+        """Applies a single update to all parameters.
+
+        All parameter updates are performed using in-place operations and so
+        nothing is returned.
+
+        Args:
+            grads_wrt_params: A list of gradients of the scalar loss function
+                with respect to each of the parameters passed to `initialise`
+                previously, with this list expected to be in the same order.
+        """
+        
+        self.t += 1
+        for param, m, s, grad in zip(self.params, self.cache_M, self.cache_S, grads_wrt_params):             
+                       
+            m *= self.alpha
+            m += ( 1 - self.alpha) * grad
+            mt = m / ( 1 - self.alpha**self.t)
+            s *= self.beta
+            s += (1-self.beta) * (grad**2)
+            st = s / ( 1 - self.beta**self.t)
+            #param += -(self.learning_rate * m)/(np.sqrt(s) + eps)
+            param += -(self.learning_rate * mt)/(np.sqrt(st) + self.eps)
