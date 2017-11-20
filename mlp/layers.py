@@ -385,19 +385,6 @@ class BatchNormalizationLayer(StochasticLayerWithParameters):
         
         batch_size = inputs.shape[0]
         
-        #u_grad = grads_wrt_outputs * self.gamma
-        
-        #grads_wrt_std = (np.sum((u_grad * u), axis=0) * (-0.5) / np.sqrt((var + self.epsilon)**3))
-        
-        #grads_wrt_mean = np.sum(u_grad / np.sqrt(var + self.epsilon),axis=0)
-        #grads_wrt_mean += (grads_wrt_std * (np.sum(-2*u,axis=0)) / batch_size)
-    
-        #grads_wrt_inputs = u_grad / np.sqrt(var+self.epsilon)
-        #grads_wrt_inputs += grads_wrt_std * (2*u/batch_size)
-        #grads_wrt_inputs += grads_wrt_mean / batch_size
-        
-        
-                
         u_grad = grads_wrt_outputs * self.gamma
         
         grads_wrt_std = np.sum(u_grad * (inputs - mean), axis=0) * (-0.5 / np.sqrt(var + self.epsilon)**3)
@@ -560,6 +547,17 @@ class ConvolutionalLayer(LayerWithParameters):
         self.biases_penalty = biases_penalty
 
         self.cache = None
+        
+    def im2col(self, A, BSZ, stepsize=1):
+        # Parameters
+        m,n = A.shape
+        s0, s1 = A.strides    
+        nrows = m-BSZ[0]+1
+        ncols = n-BSZ[1]+1
+        shp = BSZ[0],BSZ[1],nrows,ncols
+        strd = s0,s1,s0,s1
+        out_view = np.lib.stride_tricks.as_strided(A, shape=shp, strides=strd)
+        return out_view.reshape(BSZ[0]*BSZ[1],-1)[:,::stepsize]
 
     def fprop(self, inputs):
         """Forward propagates activations through the layer transformation.
@@ -570,7 +568,59 @@ class ConvolutionalLayer(LayerWithParameters):
         Returns:
             outputs: Array of layer outputs of shape (batch_size, output_dim).
         """
-        raise NotImplementedError
+
+        reshaped_kernels = np.flip(np.flip(self.kernels,2),3).reshape(self.kernels_shape[0], self.kernels_shape[1]*self.kernels_shape[2]*self.kernels_shape[3])
+        
+        image_matrix = np.array([])       
+        for image in inputs:
+            
+            image_patches = np.array([])
+            for channel in image:
+                image_patch = self.im2col(channel,(self.kernel_dim_1,self.kernel_dim_2))
+                image_patches = np.concatenate((image_patches,image_patch),axis=0) if image_patches.size else image_patch
+                
+            image_matrix = np.concatenate((image_matrix,image_patches),axis=1) if image_matrix.size else image_patches
+            
+        bias = np.array([self.biases])    
+        output = reshaped_kernels @ image_matrix + bias.transpose()
+        
+        return output.reshape((inputs.shape[0],self.num_output_channels,self.input_dim_1 - self.kernel_dim_1 + 1,self.input_dim_2 - self.kernel_dim_2 + 1)).swapaxes(0,1)
+    
+    def col2im_indices(self,cols, x_shape, field_height=3, field_width=3, padding=0,
+                   stride=1):
+        """ An implementation of col2im based on fancy indexing and np.add.at """
+        N, C, H, W = x_shape
+        H_padded, W_padded = H + 2 * padding, W + 2 * padding
+        x_padded = np.zeros((N, C, H_padded, W_padded), dtype=cols.dtype)
+        k, i, j = self.get_im2col_indices(x_shape, field_height, field_width, padding, stride)
+        cols_reshaped = cols.reshape(C * field_height * field_width, -1, N)
+        cols_reshaped = cols_reshaped.transpose(2, 0, 1)
+        np.add.at(x_padded, (slice(None), k, i, j), cols_reshaped)
+        if padding == 0:
+            return x_padded
+        return x_padded[:, :, padding:-padding, padding:-padding]
+    
+    
+
+    def get_im2col_indices(self, x_shape, field_height, field_width, padding=1, stride=1):
+        # First figure out what the size of the output should be
+        N, C, H, W = x_shape
+        assert (H + 2 * padding - field_height) % stride == 0
+        assert (W + 2 * padding - field_height) % stride == 0
+        out_height = int((H + 2 * padding - field_height) / stride + 1)
+        out_width = int((W + 2 * padding - field_width) / stride + 1)
+
+        i0 = np.repeat(np.arange(field_height), field_width)
+        i0 = np.tile(i0, C)
+        i1 = stride * np.repeat(np.arange(out_height), out_width)
+        j0 = np.tile(np.arange(field_width), field_height * C)
+        j1 = stride * np.tile(np.arange(out_width), out_height)
+        i = i0.reshape(-1, 1) + i1.reshape(1, -1)
+        j = j0.reshape(-1, 1) + j1.reshape(1, -1)
+
+        k = np.repeat(np.arange(C), field_height * field_width).reshape(-1, 1)
+
+        return (k.astype(int), i.astype(int), j.astype(int))
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
         """Back propagates gradients through a layer.
@@ -590,8 +640,16 @@ class ConvolutionalLayer(LayerWithParameters):
             (batch_size, input_dim).
         """
         # Pad the grads_wrt_outputs
+        reshaped_kernels = np.flip(np.flip(self.kernels,2),3).reshape(self.kernels_shape[0], self.kernels_shape[1]*self.kernels_shape[2]*self.kernels_shape[3])
 
-        raise NotImplementedError
+      #  grads_wrt_outputs_padded = np.pad(grads_wrt_outputs,[(0,0),(0,0),(1,1),(1,1)],'constant')
+        
+        grads_reshaped = grads_wrt_outputs.transpose(1,2,3,0).reshape(self.kernels_shape[0],-1)
+        #reshaped_grads_wrt_outputs = grads_wrt_outputs.flatten.reshape(self.kernels_shape[1]*self.kernels_shape[2]*self.kernels_shape[3],outputs.shape[0])        
+        grads_inputs_reshaped = reshaped_kernels.transpose() @ grads_reshaped
+        grads_inputs = self.col2im_indices(grads_inputs_reshaped, inputs.shape, self.kernel_dim_1, self.kernel_dim_2, padding=0, stride=1)
+        
+        return grads_inputs
 
     def grads_wrt_params(self, inputs, grads_wrt_outputs):
         """Calculates gradients with respect to layer parameters.
@@ -605,7 +663,7 @@ class ConvolutionalLayer(LayerWithParameters):
             `[grads_wrt_kernels, grads_wrt_biases]`.
         """
 
-        raise NotImplementedError
+        return 0
 
     def params_penalty(self):
         """Returns the parameter dependent penalty term for this layer.
@@ -862,7 +920,6 @@ class SoftmaxLayer(Layer):
 
 class RadialBasisFunctionLayer(Layer):
     """Layer implementing projection to a grid of radial basis functions."""
-
     def __init__(self, grid_dim, intervals=[[0., 1.]]):
         """Creates a radial basis function layer object.
 
