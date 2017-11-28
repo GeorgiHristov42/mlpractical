@@ -572,9 +572,9 @@ class ConvolutionalLayer2(LayerWithParameters):
                 temp.append(signal.convolve(image,k,mode='valid').reshape(h - self.kernel_dim_1 + 1 , w - self.kernel_dim_2 + 1) + self.biases[i])
                 i += 1
             output.append(temp)
-        final_output = np.asarray(output)
+        output = np.asarray(output)
                
-        return final_output
+        return output
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
         """Back propagates gradients through a layer.
@@ -595,39 +595,23 @@ class ConvolutionalLayer2(LayerWithParameters):
         """
         # Pad the grads_wrt_outputs
         #kernels_reshaped = self.kernels[:,::-1,:,:]
-      #  n, d, h, w = inputs.shape
+        n, d, h, w = inputs.shape
         
-       # print(grads_wrt_outputs)
-      #  grads_wrt_outputs_padded = np.pad(grads_wrt_outputs,[(0,0),(0,0),(1,1),(1,1)],'constant')
-       # print(grads_wrt_outputs_padded)
+        grads_wrt_outputs_padded = np.pad(grads_wrt_outputs,((0,0),(0,0),(self.kernel_dim_1-1, self.kernel_dim_1-1),(self.kernel_dim_2-1, self.kernel_dim_2-1)),'constant')
     
-       # kernels_reshaped = self.kernels.transpose(1,0,2,3)
-      #  output=[]
-       # for image in grads_wrt_outputs_padded:
-       #     temp = []
-       #     i=0
-        #    for k in kernels_reshaped:
-        #        #print(signal.correlate(image,k,mode='same'))
-       #         temp.append(signal.correlate(image,k,mode='valid').reshape(self.input_dim_1,self.input_dim_2))
-        #        i += 1
-        #    output.append(temp)
-        #final_output = np.asarray(output) 
-        #print(final_output.shape)
-        
-        kernel_reshaped = self.kernels[:,:,:,:]
-        kernel_reshaped = kernel_reshaped.transpose(1,0,2,3)
-        gr_padded = np.pad(grads_wrt_outputs,((0,0),(0,0),(self.kernel_dim_1-1, self.kernel_dim_1-1),(self.kernel_dim_2-1, self.kernel_dim_2-1)),'constant')
-        
-        ks = self.num_input_channels
-        ns,ds,hs,ws = inputs.shape
-        
-        out_d1, out_d2 = hs-self.kernel_dim_1 + 1,  ws - self.kernel_dim_2 + 1
-        output = np.zeros((ns,ds,hs,ws))
-        for n in range(ns):
-            for k in range(ks):
-                output[n,k,:,:] = signal.correlate(gr_padded[n,:,:,:],kernel_reshaped[k],mode='valid',method='direct').reshape(hs,ws) 
+        kernels_reshaped = self.kernels.transpose(1,0,2,3)
+        output=[]
+        for image in grads_wrt_outputs_padded:
+            temp = []
+            i=0
+            for k in kernels_reshaped:
+                #print(signal.correlate(image,k,mode='same'))
+                temp.append(signal.correlate(image,k,mode='valid').reshape(self.input_dim_1,self.input_dim_2))
+                i += 1
+            output.append(temp)
+        grads_wrt_inputs = np.asarray(output) 
               
-        return output
+        return grads_wrt_inputs
     
     def grads_wrt_params(self, inputs, grads_wrt_outputs):
         """Calculates gradients with respect to layer parameters.
@@ -641,32 +625,18 @@ class ConvolutionalLayer2(LayerWithParameters):
             [grads_wrt_kernels, grads_wrt_biases].
         """
         ns,ds,hs,ws = inputs.shape
-        biases = np.sum(grads_wrt_outputs, axis=(0, 2, 3))
+        grads_wrt_biases = np.sum(grads_wrt_outputs, axis=(0, 2, 3))
         ks = self.num_output_channels
         ns,ds,hs,ws = inputs.shape
         out_d1, out_d2 = hs-self.kernel_dim_1 + 1,  ws - self.kernel_dim_2 + 1
-        output = np.zeros(self.kernels.shape)
-        #print(output.shape)
-        #for n in range(ns):
-         #   for k in range(ks):
-          #      #print(inputs[n,:,:,:])
-           #     #print(np.tile(grads_wrt_outputs[n,k,:,:],(3,1)).reshape(3,3,3))
-            #    output[k]( scs.convolve(inputs[n,:,:,:],np.tile(grads_wrt_outputs[n,k,:,:],(3,1)).reshape(3,3,3),mode='valid',method='direct').reshape(2,2)
-              #   print('sth')
-        #print(output.shape)
-        #print(grads_wrt_outputs.shape)
-        #grads_wrt_outputs = grads_wrt_outputs[:,::-1,:,:]
-        #inputs = inputs[:,:,::-1,::-1]
+        grads_wrt_kernels = np.zeros(self.kernels.shape)
+
         for n in range(ns):
             for k in range(ks):
                 for i in range(self.num_input_channels):
                     ker = grads_wrt_outputs[n,k,:,:]
-                    #print(ker)
-                    #print(scs.convolve(inputs[n,i,:,:],ker,mode='valid',method='direct'))
-                    output[k,i,:,:] += signal.correlate(inputs[n,i,:,:],ker,mode='valid',method='direct')[::-1,::-1]
-                    #print('---------')
-        #print(output)
-        return [output, biases]
+                    grads_wrt_kernels[k,i,:,:] += signal.correlate(inputs[n,i,:,:],ker,mode='valid',method='direct')[::-1,::-1]
+        return [grads_wrt_kernels, grads_wrt_biases]
 
     def params_penalty(self):
         """Returns the parameter dependent penalty term for this layer.
@@ -974,7 +944,7 @@ class MaxPoolingLayer(Layer):
         
         
     def get_im2col_indices(self, x_shape, field_height, field_width, padding=1, stride=1):
-            # First figure out what the size of the output should be
+        # First figure out what the size of the output should be
         N, C, H, W = x_shape
         assert (H + 2 * padding - field_height) % stride == 0
         assert (W + 2 * padding - field_height) % stride == 0
@@ -1024,37 +994,25 @@ class MaxPoolingLayer(Layer):
         
         n, d, h, w = inputs.shape
         
-        size=2
-        stride= 2
+        size = self.pool_dim_1
+        stride = self.pool_dim_1
         h_out = (h - size) / stride + 1
         w_out = (w - size) / stride + 1
 
-        if not w_out.is_integer() or not h_out.is_integer():
-            raise Exception('Invalid output dimension!')
-
         h_out, w_out = int(h_out), int(w_out)
 
-        # First, reshape it to 50x1x28x28 to make im2col arranges it fully in column
         inputs_reshaped = inputs.reshape(n * d, 1, h, w)
     
-        # The result will be 4x9800
-        # Note if we apply im2col to our 5x10x28x28 input, the result won't be as nice: 40x980
         inputs_col = self.im2col_indices(inputs_reshaped, size, size, padding=0, stride=stride)
 
-        # Next, at each possible patch location, i.e. at each column, we're taking the max index
         max_idx = np.argmax(inputs_col, axis=0)
         self.cache = inputs_col , max_idx
 
-        # Finally, we get all the max value at each column
-        # The result will be 1x9800
-        out = inputs_col[max_idx, range(max_idx.size)]
+        output = inputs_col[max_idx, range(max_idx.size)]
 
-        # Reshape to the output size: 14x14x5x10
-        out = out.reshape(h_out, w_out, n, d)
-
-        # Transpose to get 5x10x14x14 output
-        out = out.transpose(2, 3, 0, 1)        
-        return out
+        output = output.reshape(h_out, w_out, n, d)
+        output = output.transpose(2, 3, 0, 1)        
+        return output
     
     def bprop(self, inputs, outputs, grads_wrt_outputs):
 
@@ -1072,29 +1030,17 @@ class MaxPoolingLayer(Layer):
             max_idx = np.argmax(inputs_col, axis=0)
 
         grads_wrt_inputs_col = np.zeros_like(inputs_col)
+        grads_wrt_outputs_flat = grads_wrt_outputs.transpose(2, 3, 0, 1).ravel()
 
-        # 5x10x14x14 => 14x14x5x10, then flattened to 1x9800
-        # Transpose step is necessary to get the correct arrangement
-        dout_flat = grads_wrt_outputs.transpose(2, 3, 0, 1).ravel()
-
-        # Fill the maximum index of each column with the gradient
-
-        # Essentially putting each of the 9800 grads
-        # to one of the 4 row in 9800 locations, one at each column
-        grads_wrt_inputs_col[max_idx, range(max_idx.size)] = dout_flat
-
-        # We now have the stretched matrix of 4x9800, then undo it with col2im operation
-        # dX would be 50x1x28x28
-        dX = self.col2im_indices(grads_wrt_inputs_col, (n * d, 1, h, w), size, size, padding=0, stride=stride)
-
-        # Reshape back to match the input dimension: 5x10x28x28
-        dX = dX.reshape(inputs.shape)
-        return dX
+        grads_wrt_inputs_col[max_idx, range(max_idx.size)] = grads_wrt_outputs_flat
+        grads_wrt_inputs = self.col2im_indices(grads_wrt_inputs_col, (n * d, 1, h, w), size, size, padding=0, stride=stride)
+        grads_wrt_inputs = grads_wrt_inputs.reshape(inputs.shape)
+        return grads_wrt_inputs
 
     def __repr__(self):
         return 'MaxPoolLayer'
     
-class MaxPoolingLayer2(Layer):
+class MaxPoolingLayer1D(Layer):
     
     def __init__(self, pool_size=2):
         """Construct a new max-pooling layer.
@@ -1545,3 +1491,309 @@ class ReshapeLayer(Layer):
 
     def __repr__(self):
         return 'ReshapeLayer(output_shape={0})'.format(self.output_shape)
+
+class L1Penalty(object):
+    """L1 parameter penalty.
+    
+    Term to add to the objective function penalising parameters
+    based on their L1 norm.
+    """
+    
+    def __init__(self, coefficient):
+        """Create a new L1 penalty object.
+        
+        Args:
+            coefficient: Positive constant to scale penalty term by.
+        """
+        assert coefficient > 0., 'Penalty coefficient must be positive.'
+        self.coefficient = coefficient
+        
+    def __call__(self, parameter):
+        """Calculate L1 penalty value for a parameter.
+        
+        Args:
+            parameter: Array corresponding to a model parameter.
+            
+        Returns:
+            Value of penalty term.
+        """
+        return self.coefficient * abs(parameter).sum()
+        
+    def grad(self, parameter):
+        """Calculate the penalty gradient with respect to the parameter.
+        
+        Args:
+            parameter: Array corresponding to a model parameter.
+            
+        Returns:
+            Value of penalty gradient with respect to parameter. This
+            should be an array of the same shape as the parameter.
+        """
+        return self.coefficient * np.sign(parameter)
+    
+    def __repr__(self):
+        return 'L1Penalty({0})'.format(self.coefficient)
+        
+
+class L2Penalty(object):
+    """L1 parameter penalty.
+    
+    Term to add to the objective function penalising parameters
+    based on their L2 norm.
+    """
+
+    def __init__(self, coefficient):
+        """Create a new L2 penalty object.
+        
+        Args:
+            coefficient: Positive constant to scale penalty term by.
+        """
+        assert coefficient > 0., 'Penalty coefficient must be positive.'
+        self.coefficient = coefficient
+        
+    def __call__(self, parameter):
+        """Calculate L2 penalty value for a parameter.
+        
+        Args:
+            parameter: Array corresponding to a model parameter.
+            
+        Returns:
+            Value of penalty term.
+        """
+        return 0.5 * self.coefficient * (parameter**2).sum()
+        
+    def grad(self, parameter):
+        """Calculate the penalty gradient with respect to the parameter.
+        
+        Args:
+            parameter: Array corresponding to a model parameter.
+            
+        Returns:
+            Value of penalty gradient with respect to parameter. This
+            should be an array of the same shape as the parameter.
+        """
+        return self.coefficient * parameter
+    
+    def __repr__(self):
+        return 'L2Penalty({0})'.format(self.coefficient)
+    
+    
+class ConvolutionalLayer3(LayerWithParameters):
+    """Layer implementing a 2D convolution-based transformation of its inputs.
+    The layer is parameterised by a set of 2D convolutional kernels, a four
+    dimensional array of shape
+        (num_output_channels, num_input_channels, kernel_dim_1, kernel_dim_2)
+    and a bias vector, a one dimensional array of shape
+        (num_output_channels,)
+    i.e. one shared bias per output channel.
+    Assuming no-padding is applied to the inputs so that outputs are only
+    calculated for positions where the kernel filters fully overlap with the
+    inputs, and that unit strides are used the outputs will have spatial extent
+        output_dim_1 = input_dim_1 - kernel_dim_1 + 1
+        output_dim_2 = input_dim_2 - kernel_dim_2 + 1
+    """
+
+    def __init__(self, num_input_channels, num_output_channels,
+                 input_dim_1, input_dim_2,
+                 kernel_dim_1, kernel_dim_2,
+                 kernels_init=init.UniformInit(-0.01, 0.01),
+                 biases_init=init.ConstantInit(0.),
+                 kernels_penalty=None, biases_penalty=None):
+        """Initialises a parameterised convolutional layer.
+        Args:
+            num_input_channels (int): Number of channels in inputs to
+                layer (this may be number of colour channels in the input
+                images if used as the first layer in a model, or the
+                number of output channels, a.k.a. feature maps, from a
+                a previous convolutional layer).
+            num_output_channels (int): Number of channels in outputs
+                from the layer, a.k.a. number of feature maps.
+            input_dim_1 (int): Size of first input dimension of each 2D
+                channel of inputs.
+            input_dim_2 (int): Size of second input dimension of each 2D
+                channel of inputs.
+            kernel_dim_1 (int): Size of first dimension of each 2D channel of
+                kernels.
+            kernel_dim_2 (int): Size of second dimension of each 2D channel of
+                kernels.
+            kernels_intialiser: Initialiser for the kernel parameters.
+            biases_initialiser: Initialiser for the bias parameters.
+            kernels_penalty: Kernel-dependent penalty term (regulariser) or
+                None if no regularisation is to be applied to the kernels.
+            biases_penalty: Biases-dependent penalty term (regulariser) or
+                None if no regularisation is to be applied to the biases.
+        """
+        self.num_input_channels = num_input_channels
+        self.num_output_channels = num_output_channels
+        self.input_dim_1 = input_dim_1
+        self.input_dim_2 = input_dim_2
+        self.kernel_dim_1 = kernel_dim_1
+        self.kernel_dim_2 = kernel_dim_2
+        self.kernels_init = kernels_init
+        self.biases_init = biases_init
+        self.kernels_shape = (
+            num_output_channels, num_input_channels, kernel_dim_1, kernel_dim_2
+        )
+        self.inputs_shape = (
+            None, num_input_channels, input_dim_1, input_dim_2
+        )
+        self.kernels = self.kernels_init(self.kernels_shape)
+        self.biases = self.biases_init(num_output_channels)
+        self.kernels_penalty = kernels_penalty
+        self.biases_penalty = biases_penalty
+
+        self.cache = None
+
+    def fprop(self, inputs):
+        """Forward propagates activations through the layer transformation.
+        For inputs x, outputs y, kernels K and biases b the layer
+        corresponds to y = conv2d(x, K) + b.
+        Args:
+            inputs: Array of layer inputs of shape (batch_size, input_dim).
+        Returns:
+            outputs: Array of layer outputs of shape (batch_size, output_dim).
+        """
+        from scipy import signal
+        result = []
+        kernels = self.kernels[:,::-1,:,:]
+        for img in inputs:
+            conv_img = []
+            i = 0
+            for kernel in kernels:
+                conv_img.append(signal.convolve(img,kernel,mode='valid',method='direct').reshape(self.input_dim_1-self.kernel_dim_1+1,self.input_dim_1-self.kernel_dim_1+1) + self.biases[i])
+                i += 1
+            result.append(conv_img)
+        return np.array(result)
+
+    def bprop(self, inputs, outputs, grads_wrt_outputs):
+        """Back propagates gradients through a layer.
+        Given gradients with respect to the outputs of the layer calculates the
+        gradients with respect to the layer inputs.
+        Args:
+            inputs: Array of layer inputs of shape
+                (batch_size, num_input_channels, input_dim_1, input_dim_2).
+            outputs: Array of layer outputs calculated in forward pass of
+                shape
+                (batch_size, num_output_channels, output_dim_1, output_dim_2).
+            grads_wrt_outputs: Array of gradients with respect to the layer
+                outputs of shape
+                (batch_size, num_output_channels, output_dim_1, output_dim_2).
+        Returns:
+            Array of gradients with respect to the layer inputs of shape
+            (batch_size, input_dim).
+        """
+        from scipy import signal
+        result = []
+        padded_grad = np.pad(grads_wrt_outputs,((0,0),(0,0),(self.kernel_dim_1-1,self.kernel_dim_1-1),(self.kernel_dim_2-1,self.kernel_dim_2-1)),mode='constant')
+        reshaped_kernels = self.kernels.transpose(1,0,2,3)
+        for i in range(inputs.shape[0]):
+            conv_neshto = []
+            for j in range(reshaped_kernels.shape[0]):
+                conv_neshto.append(signal.correlate(padded_grad[i,:,:,:],reshaped_kernels[j],mode='valid',method='direct')
+                                                .reshape(inputs.shape[2],inputs.shape[3]))
+            result.append(np.array(conv_neshto))
+        return np.array(result)
+
+    def grads_wrt_params(self, inputs, grads_wrt_outputs):
+        """Calculates gradients with respect to layer parameters.
+        Args:
+            inputs: array of inputs to layer of shape (batch_size, input_dim)
+            grads_wrt_to_outputs: array of gradients with respect to the layer
+                outputs of shape
+                (batch_size, num_output-_channels, output_dim_1, output_dim_2).
+        Returns:
+            list of arrays of gradients with respect to the layer parameters
+            [grads_wrt_kernels, grads_wrt_biases].
+        """
+        from scipy import signal
+        grads_wrt_biases = np.sum(grads_wrt_outputs,(0,2,3))
+        result = []
+        
+#         print("Grads_wrt_outputs shape:",self.num_input_channels)
+        for kernel in range(self.num_output_channels):
+            level2 = []
+            for channel in range(self.num_input_channels):
+                conv_img = []
+                opi = False
+                for img in range(inputs.shape[0]):
+                    if opi == False:
+                        test = signal.correlate(inputs[img,channel,:,:],grads_wrt_outputs[img,kernel,:,:],mode='valid',method='direct')[::-1,::-1]
+                        conv_img.append(test)
+                        conv_img = np.array(conv_img)
+                        opi = True
+                    else:
+                        conv_img += signal.correlate(inputs[img,channel,:,:],grads_wrt_outputs[img,kernel,:,:],mode='valid',method='direct')[::-1,::-1]
+                level2.append(conv_img)
+            result.append(level2)
+#             print(np.array(result))
+        return [np.array(result).reshape(self.num_output_channels,self.num_input_channels,self.kernel_dim_1,self.kernel_dim_2),grads_wrt_biases]
+
+
+
+class MaxPoolingLayer3(Layer):
+    
+    def __init__(self, pool_size=(2,2)):
+        """Construct a new max-pooling layer.
+        
+        Args:
+            pool_size: Positive integer specifying size of pools over
+               which to take maximum value. The outputs of the layer
+               feeding in to this layer must have a dimension which
+               is a multiple of this pool size such that the outputs
+               can be split in to pools with no dimensions left over.
+        """
+        self.pool_size = pool_size
+    
+    def fprop(self, inputs):
+        """Forward propagates activations through the layer transformation.
+        
+        This corresponds to taking the maximum over non-overlapping pools of
+        inputs of a fixed size pool_size.
+
+        Args:
+            inputs: Array of layer inputs of shape (batch_size, input_dim).
+
+        Returns:
+            outputs: Array of layer outputs of shape (batch_size, output_dim).
+        """
+        output = np.zeros((inputs.shape[0],inputs.shape[1],inputs.shape[2]//2,inputs.shape[3]// 2))
+        mask = np.zeros(inputs.shape)
+        for i in range(inputs.shape[0]):
+            for j in range(inputs.shape[1]):
+                shape1 = inputs[i,j,:,:].flatten().shape[0]//4
+                shape2 = shape1//2
+                test = inputs[i,j,:,:].flatten().reshape(shape1,2,2)
+                test2 = np.sum((test.flatten() == np.max(np.max(test,axis=2).reshape(shape2,2,2),axis=0).flatten()[..., None]),axis=0)
+                mask[i,j] = test2.reshape(inputs.shape[2],inputs.shape[3])
+                test3 = np.max(np.max(test,axis=2).reshape(shape2,2,2),axis=1)
+                output[i,j] = np.array(np.split(test3.flatten(),12))
+        self._mask = mask
+        return output
+
+    def bprop(self, inputs, outputs, grads_wrt_outputs):
+        """Back propagates gradients through a layer.
+
+        Given gradients with respect to the outputs of the layer calculates the
+        gradients with respect to the layer inputs.
+
+        Args:
+            inputs: Array of layer inputs of shape (batch_size, input_dim).
+            outputs: Array of layer outputs calculated in forward pass of
+                shape (batch_size, output_dim).
+            grads_wrt_outputs: Array of gradients with respect to the layer
+                outputs of shape (batch_size, output_dim).
+
+        Returns:
+            Array of gradients with respect to the layer inputs of shape
+            (batch_size, input_dim).
+        """
+        result = np.zeros(inputs.shape)
+        for i in range(inputs.shape[0]):
+            for j in range(inputs.shape[1]):
+                for k in range(inputs.shape[2]//12):
+                    for l in range(inputs.shape[3]//12):
+                        result[i,j,k*12:k*12+12,l*12:l*12+12] = self._mask[i,j,k*12:k*12+12,l*12:l*12+12]*grads_wrt_outputs[i,j,:,:]
+        return result
+
+    def __repr__(self):
+        return 'MaxPoolingLayer(pool_size={0})'.format(self.pool_size)

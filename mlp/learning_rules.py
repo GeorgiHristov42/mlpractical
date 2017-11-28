@@ -337,6 +337,9 @@ class AdamComplexLearningRule(GradientDescentLearningRule):
         self.alpha = alpha
         self.beta = beta
         self.t = 0
+        
+        #self.beta = np.random.normal(size=(input_dim))
+        #self.gamma = np.random.normal(size=(input_dim))
 
     def initialise(self, params):
         """Initialises the state of the learning rule for a set or parameters.
@@ -390,4 +393,4 @@ class AdamComplexLearningRule(GradientDescentLearningRule):
             s += (1-self.beta) * (grad**2)
             st = s / ( 1 - self.beta**self.t)
             #param += -(self.learning_rate * m)/(np.sqrt(s) + eps)
-            param += -(self.learning_rate * mt)/(np.sqrt(st) + self.eps)
+            param += -(self.learning_rate * mt)/(np.sqrt(st) + self.eps)            
