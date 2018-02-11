@@ -31,12 +31,12 @@ class ClassifierNetworkGraph:
         if network_name == "VGG_classifier":
             self.c = VGGClassifier(self.batch_size, name="classifier_neural_network",
                                    batch_norm_use=use_batch_normalization, num_channels=num_channels,
-                                   num_classes=n_classes, layer_stage_sizes=[64, 128, 256, 256, 256],
+                                   num_classes=n_classes, layer_stage_sizes=[64, 128, 256],
                                    strided_dim_reduction=strided_dim_reduction)
         elif network_name == "FCCClassifier":
             self.c = FCCLayerClassifier(self.batch_size, name="classifier_neural_network",
                                    batch_norm_use=use_batch_normalization, num_channels=num_channels,
-                                   num_classes=n_classes, layer_stage_sizes=[64, 128, 256, 256, 256],
+                                   num_classes=n_classes, layer_stage_sizes=[64, 128, 256],
                                    strided_dim_reduction=strided_dim_reduction)
 
         self.input_x = input_x

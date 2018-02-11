@@ -3,8 +3,8 @@
 #SBATCH -n 1	  # tasks requested
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16000  # memory in Mb
-#SBATCH -o sample_experiment_outfile  # send stdout to sample_experiment_outfile
-#SBATCH -e sample_experiment_errfile  # send stderr to sample_experiment_errfile
+#SBATCH -o outfile  # send stdout to sample_experiment_outfile
+#SBATCH -e errfile  # send stderr to sample_experiment_errfile
 #SBATCH -t 8:00:00  # time requested in hour:minute:secon
 export CUDA_HOME=/opt/cuda-8.0.44
 
@@ -30,4 +30,4 @@ export TMP=/disk/scratch/${STUDENT_ID}/
 
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
-python cifar100_network_trainer.py --batch_size 128 --epochs 200 --experiment_prefix vgg-net-cifar100-sample-exp --dropout_rate 0.4 --batch_norm_use True --strided_dim_reduction True --seed 25012018
+python cifar100_network_trainer.py --batch_size 128 --epochs 100 --experiment_prefix vgg-net-cifar100-sample-exp --dropout_rate 0.4 --batch_norm_use True --strided_dim_reduction True --seed 25012018
