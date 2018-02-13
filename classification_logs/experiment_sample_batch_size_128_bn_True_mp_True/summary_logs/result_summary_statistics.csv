@@ -1,0 +1,3 @@
+epoch,train_c_loss,train_c_accuracy,val_c_loss,val_c_accuracy,test_c_loss,test_c_accuracy
+0,4.15673025688,0.11078689759,5.02107160667,0.0503771551724,-1,-1
+test set performance,-1,-1,-1,-1,5.01238407844,0.0514823717949
