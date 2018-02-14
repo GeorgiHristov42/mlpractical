@@ -1,0 +1,2 @@
+model_checkpoint_path: "one_shot_learning_embedding_1_20_0.ckpt"
+all_model_checkpoint_paths: "one_shot_learning_embedding_1_20_0.ckpt"
