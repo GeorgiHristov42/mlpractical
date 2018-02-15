@@ -62,3 +62,4 @@ data/
 notebooks/.ipybn_checkpoints/
 notebooks/.ipybn_checkpoints/
 notebooks/.ipynb_checkpoints/
+notebooks/*.npy
