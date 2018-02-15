@@ -488,12 +488,12 @@ class CIFAR100_1_shot(DataProvider):
         inputs = inputs / 255.0
 
         # pass the loaded data to the parent class __init__
-        super(CIFAR100DataProvider, self).__init__(
+        super(CIFAR100_1_shot, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-        inputs_batch, targets_batch = super(CIFAR100DataProvider, self).next()
+        inputs_batch, targets_batch = super(CIFAR100_1_shot, self).next()
         if self.one_hot:
             return inputs_batch, self.to_one_of_k(targets_batch)
         else:
@@ -551,7 +551,7 @@ class CIFAR100_5_shot(DataProvider):
         # MLP_DATA_DIR environment variable should point to the data directory
         if self.which_set is 'train':
             data_path = os.path.join(
-                os.environ['MLP_DATA_DIR'], 'cifar_5_shot.npy')
+                os.environ['MLP_DATA_DIR'], 'cifar_5_shot.npz')
         else:
             data_path = os.path.join(
                 os.environ['MLP_DATA_DIR'], 'cifar100-{0}.npz'.format(which_set))
@@ -571,12 +571,12 @@ class CIFAR100_5_shot(DataProvider):
         inputs = inputs / 255.0
 
         # pass the loaded data to the parent class __init__
-        super(CIFAR100DataProvider, self).__init__(
+        super(CIFAR100_5_shot, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-        inputs_batch, targets_batch = super(CIFAR100DataProvider, self).next()
+        inputs_batch, targets_batch = super(CIFAR100_5_shot, self).next()
         if self.one_hot:
             return inputs_batch, self.to_one_of_k(targets_batch)
         else:
@@ -634,7 +634,7 @@ class CIFAR100_10_shot(DataProvider):
         # MLP_DATA_DIR environment variable should point to the data directory
         if self.which_set is 'train':
             data_path = os.path.join(
-                os.environ['MLP_DATA_DIR'], 'cifar_10_shot.npy')
+                os.environ['MLP_DATA_DIR'], 'cifar_10_shot.npz')
         else:
             data_path = os.path.join(
                 os.environ['MLP_DATA_DIR'], 'cifar100-{0}.npz'.format(which_set))
@@ -654,12 +654,12 @@ class CIFAR100_10_shot(DataProvider):
         inputs = inputs / 255.0
 
         # pass the loaded data to the parent class __init__
-        super(CIFAR100DataProvider, self).__init__(
+        super(CIFAR100_10_shot, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-        inputs_batch, targets_batch = super(CIFAR100DataProvider, self).next()
+        inputs_batch, targets_batch = super(CIFAR100_10_shot, self).next()
         if self.one_hot:
             return inputs_batch, self.to_one_of_k(targets_batch)
         else:
@@ -717,7 +717,7 @@ class CIFAR100_20_shot(DataProvider):
         # MLP_DATA_DIR environment variable should point to the data directory
         if self.which_set is 'train':
             data_path = os.path.join(
-                os.environ['MLP_DATA_DIR'], 'cifar_20_shot.npy')
+                os.environ['MLP_DATA_DIR'], 'cifar_20_shot.npz')
         else:
             data_path = os.path.join(
                 os.environ['MLP_DATA_DIR'], 'cifar100-{0}.npz'.format(which_set))
@@ -737,12 +737,12 @@ class CIFAR100_20_shot(DataProvider):
         inputs = inputs / 255.0
 
         # pass the loaded data to the parent class __init__
-        super(CIFAR100DataProvider, self).__init__(
+        super(CIFAR100_20_shot, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-        inputs_batch, targets_batch = super(CIFAR100DataProvider, self).next()
+        inputs_batch, targets_batch = super(CIFAR100_20_shot, self).next()
         if self.one_hot:
             return inputs_batch, self.to_one_of_k(targets_batch)
         else:
@@ -800,7 +800,7 @@ class CIFAR100_50_shot(DataProvider):
         # MLP_DATA_DIR environment variable should point to the data directory
         if self.which_set is 'train':
             data_path = os.path.join(
-                os.environ['MLP_DATA_DIR'], 'cifar_50_shot.npy')
+                os.environ['MLP_DATA_DIR'], 'cifar_50_shot.npz')
         else:
             data_path = os.path.join(
                 os.environ['MLP_DATA_DIR'], 'cifar100-{0}.npz'.format(which_set))
@@ -820,12 +820,12 @@ class CIFAR100_50_shot(DataProvider):
         inputs = inputs / 255.0
 
         # pass the loaded data to the parent class __init__
-        super(CIFAR100DataProvider, self).__init__(
+        super(CIFAR100_50_shot, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-        inputs_batch, targets_batch = super(CIFAR100DataProvider, self).next()
+        inputs_batch, targets_batch = super(CIFAR100_50_shot, self).next()
         if self.one_hot:
             return inputs_batch, self.to_one_of_k(targets_batch)
         else:
