@@ -19,7 +19,7 @@ if len(sys.argv) == 3:
     new = np.concatenate((inputs,targets),axis=1)
     new = new[new[:,3072].argsort()]
 
-    num_entries = 300
+    num_entries = num
 
     curr_class = 0
     curr_class_count = 0
