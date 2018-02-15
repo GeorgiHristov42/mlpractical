@@ -21,6 +21,8 @@ class ParserClass(object):
         parser.add_argument('--strided_dim_reduction', nargs="?", type=str, default="False",
                             help='Whether to use tensorboard')
         parser.add_argument('--seed', nargs="?", type=int, default=1122017, help='Whether to use tensorboard')
+        
+        parser.add_argument('--n_shot', nargs="?", type=int, default=None, help='Number of samples per class in train set')
 
         self.args = parser.parse_args()
 
@@ -39,6 +41,7 @@ class ParserClass(object):
         continue_from_epoch = self.args.continue_epoch  # use -1 to start from scratch
         epochs = self.args.epochs
         logs_path = self.args.logs_path
+        n_shot = self.args.n_shot
 
         return batch_size, seed, epochs, logs_path, continue_from_epoch, tensorboard_enable, batch_norm, \
-               strided_dim_reduction, experiment_prefix, dropout_rate
+               strided_dim_reduction, experiment_prefix, dropout_rate, n_shot

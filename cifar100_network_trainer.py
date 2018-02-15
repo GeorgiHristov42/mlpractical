@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 import tensorflow as tf
 import tqdm
-from data_providers import CIFAR100DataProvider
+from data_providers import CIFAR100DataProvider, CIFAR100_1_shot, CIFAR100_5_shot, CIFAR100_10_shot, CIFAR100_20_shot, CIFAR100_50_shot
 from network_builder import ClassifierNetworkGraph
 from utils.parser_utils import ParserClass
 from utils.storage import build_experiment_folder, save_statistics
@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='Welcome to CNN experiments script'
 parser_extractor = ParserClass(parser=parser)  # creates a parser class to process the parsed input
 
 batch_size, seed, epochs, logs_path, continue_from_epoch, tensorboard_enable, batch_norm, \
-strided_dim_reduction, experiment_prefix, dropout_rate_value = parser_extractor.get_argument_variables()
+strided_dim_reduction, experiment_prefix, dropout_rate_value, n_shot = parser_extractor.get_argument_variables()
 # returns a list of objects that contain
 # our parsed input
 
@@ -23,9 +23,35 @@ experiment_name = "experiment_{}_batch_size_{}_bn_{}_mp_{}".format(experiment_pr
 
 rng = np.random.RandomState(seed=seed)  # set seed
 
-train_data = CIFAR100DataProvider(which_set="train", batch_size=batch_size, rng=rng)
-val_data = CIFAR100DataProvider(which_set="valid", batch_size=batch_size, rng=rng)
-test_data = CIFAR100DataProvider(which_set="test", batch_size=batch_size, rng=rng)
+if n_shot is None:
+    train_data = CIFAR100DataProvider(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100DataProvider(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100DataProvider(which_set="test", batch_size=batch_size, rng=rng)
+elif n_shot == 1:
+    train_data = CIFAR100_1_shot(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100_1_shot(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100_1_shot(which_set="test", batch_size=batch_size, rng=rng)
+elif n_shot == 5:
+    train_data = CIFAR100_5_shot(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100_5_shot(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100_5_shot(which_set="test", batch_size=batch_size, rng=rng)
+elif n_shot == 10:
+    train_data = CIFAR100_10_shot(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100_10_shot(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100_10_shot(which_set="test", batch_size=batch_size, rng=rng)
+elif n_shot == 20:
+    train_data = CIFAR100_20_shot(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100_20_shot(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100_20_shot(which_set="test", batch_size=batch_size, rng=rng)  
+elif n_shot == 50:
+    train_data = CIFAR100_50_shot(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100_50_shot(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100_50_shot(which_set="test", batch_size=batch_size, rng=rng)
+else:
+    train_data = CIFAR100DataProvider(which_set="train", batch_size=batch_size, rng=rng)
+    val_data = CIFAR100DataProvider(which_set="valid", batch_size=batch_size, rng=rng)
+    test_data = CIFAR100DataProvider(which_set="test", batch_size=batch_size, rng=rng)
+    
 #  setup our data providers
 
 print("Running {}".format(experiment_name))
