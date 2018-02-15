@@ -10,12 +10,12 @@ tf.reset_default_graph()
 # Experiment Setup
 batch_size = 32
 fce = False
-classes_per_set = 20
+classes_per_set = 10
 samples_per_class = 1
 continue_from_epoch = -1  # use -1 to start from scratch
-epochs = 200
+epochs = 100
 logs_path = "one_shot_outputs/"
-experiment_name = "one_shot_learning_embedding_{}_{}".format(samples_per_class, classes_per_set)
+experiment_name = "test_100epoch_one_shot_learning_embedding_{}_{}".format(samples_per_class, classes_per_set)
 
 # Experiment builder
 data = dataset.OmniglotNShotDataset(batch_size=batch_size,
@@ -24,7 +24,7 @@ experiment = ExperimentBuilder(data)
 one_shot_omniglot, losses, c_error_opt_op, init = experiment.build_experiment(batch_size,
                                                                                      classes_per_set,
                                                                                      samples_per_class, fce)
-total_epochs = 300
+total_epochs = 100
 total_train_batches = 1000
 total_val_batches = 250
 total_test_batches = 250
