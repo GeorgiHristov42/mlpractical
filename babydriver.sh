@@ -30,4 +30,4 @@ export TMP=/disk/scratch/${STUDENT_ID}/
 
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
-python cifar100_network_trainer.py --batch_size 128 --epochs 100 --experiment_prefix baseline3stage5dropoutMP --dropout_rate 0.5 --batch_norm_use True --strided_dim_reduction False --seed 25012018
+python cifar100_network_trainer.py --batch_size 128 --epochs 100 --experiment_prefix baseline4stage6dropoutMPCReLU --dropout_rate 0.6 --batch_norm_use True --strided_dim_reduction False --seed 25012018

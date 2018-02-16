@@ -1,2 +1,0 @@
-model_checkpoint_path: "best_validation_experiment_sample_batch_size_128_bn_True_mp_True_0.ckpt"
-all_model_checkpoint_paths: "best_validation_experiment_sample_batch_size_128_bn_True_mp_True_0.ckpt"
