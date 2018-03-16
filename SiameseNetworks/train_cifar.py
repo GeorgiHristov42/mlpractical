@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow.contrib.slim as slim
 import os
 
@@ -33,7 +32,7 @@ loss = contrastive_loss(left_output, right_output, label, margin)
 global_step = tf.Variable(0, trainable=False)
 
 
-# starter_learning_rate = 0.0001
+# starter_learning_rate = 0.00001
 # learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 1000, 0.96, staircase=True)
 # tf.scalar_summary('lr', learning_rate)
 # train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss, global_step=global_step)

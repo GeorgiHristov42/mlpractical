@@ -2,7 +2,6 @@ import tensorflow as tf
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow.contrib.slim as slim
 import random
 from tensorflow.examples.tutorials.mnist import input_data
@@ -48,13 +47,9 @@ class BatchGenerator():
 		#impostor
 		incl = 0
 		for i,j in combinations(range(100), 2):
-			if incl == 19:
-				left.append(self.to_img(choice(self.num_idx[i])))
-				right.append(self.to_img(choice(self.num_idx[j])))
-				sim.append([0])
-				incl = 0
-			else:
-				 incl += 1
+			left.append(self.to_img(choice(self.num_idx[i])))
+			right.append(self.to_img(choice(self.num_idx[j])))
+			sim.append([0])
 		return np.array(left), np.array(right), np.array(sim)
 
 
