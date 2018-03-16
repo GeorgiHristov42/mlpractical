@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/iangelinin/MLP/siamesenetwork-tensorflow/model_cifar/model.ckpt"
+all_model_checkpoint_paths: "/home/iangelinin/MLP/siamesenetwork-tensorflow/model_cifar/model.ckpt"
