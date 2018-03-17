@@ -27,19 +27,19 @@ def mynet(input, reuse=False):
 		        weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),scope=scope,reuse=reuse)
 			net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
-		with tf.variable_scope("conv5") as scope:
-			net = tf.contrib.layers.conv2d(net, 2, [1, 1], activation_fn=None, padding='SAME',
-		        weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),scope=scope,reuse=reuse)
-			net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
+		# with tf.variable_scope("conv5") as scope:
+		# 	net = tf.contrib.layers.conv2d(net, 2, [1, 1], activation_fn=None, padding='SAME',
+		#         weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),scope=scope,reuse=reuse)
+		# 	net = tf.contrib.layers.max_pool2d(net, [2, 2], padding='SAME')
 
 		net = tf.contrib.layers.flatten(net)
-	
+
 	return net
 
 
 def contrastive_loss(model1, model2, y, margin):
 	with tf.name_scope("contrastive-loss"):
 		d = tf.sqrt(tf.reduce_sum(tf.pow(model1-model2, 2), 1, keep_dims=True))
-		tmp= y * tf.square(d)    
+		tmp= y * tf.square(d)
 		tmp2 = (1 - y) * tf.square(tf.maximum((margin - d),0))
 		return tf.reduce_mean(tmp + tmp2) /2
