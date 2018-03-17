@@ -1,14 +1,11 @@
-%matplotlib inline
 import tensorflow as tf
 import numpy as np
 import tensorflow.contrib.slim as slim
-import pandas as pd
 import os
 from cifar_dataset import get_cifar
 from model import *
 
 from scipy.spatial.distance import cdist
-from matplotlib import gridspec
 
 cifar = get_cifar()
 train_images = np.array([im.reshape((3,32,32)).transpose((1,2,0)) for im in cifar.train.images])
@@ -25,7 +22,7 @@ with tf.Session() as sess:
     ckpt = tf.train.get_checkpoint_state( os.path.join(os.getcwd(), "model_cifar"))
     saver.restore(sess,  os.path.join(os.getcwd(), "model_cifar/model.ckpt"))
 
-    train_feat = sess.run(net, feed_dict={img_placeholder:train_images[:]})
+    train_feat = sess.run(net, feed_dict={img_placeholder:train_images[:20000]})
 
 
 true = 0

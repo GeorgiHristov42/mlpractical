@@ -7,7 +7,7 @@ from cifar_dataset import BatchGenerator, get_cifar
 from model import *
 
 flags.DEFINE_integer('batch_size', 100, 'Batch size.')
-flags.DEFINE_integer('train_iter', 1000, 'Total training iter')
+flags.DEFINE_integer('train_iter', 20000, 'Total training iter')
 flags.DEFINE_integer('step', 100, 'Save after ... iteration')
 
 cifar = get_cifar()
