@@ -3,14 +3,14 @@
 #SBATCH -n 1	  # tasks requested
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16000  # memory in Mb
-#SBATCH -o outfile_exp  # send stdout to sample_experiment_outfile
-#SBATCH -e errfile  # send stderr to sample_experiment_errfile
+#SBATCH -o outfile_20  # send stdout to sample_experiment_outfile
+#SBATCH -e errfile_20  # send stderr to sample_experiment_errfile
 #SBATCH -t 8:00:00  # time requested in hour:minute:secon
 export CUDA_HOME=/opt/cuda-8.0.44
 
 export CUDNN_HOME=/opt/cuDNN-6.0_8.0
 
-export STUDENT_ID=s1446364
+export STUDENT_ID=s1413927
 
 export LD_LIBRARY_PATH=${CUDNN_HOME}/lib64:${CUDA_HOME}/lib64:$LD_LIBRARY_PATH
 
@@ -30,4 +30,4 @@ export TMP=/disk/scratch/${STUDENT_ID}/
 
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
-python experiment.py
+python train_cifar_20.py

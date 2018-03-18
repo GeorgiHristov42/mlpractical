@@ -1,0 +1,6 @@
+/home/s1446364/miniconda3/envs/mlp/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: compiletime version 3.5 of module 'tensorflow.python.framework.fast_tensor_util' does not match runtime version 3.6
+  return f(*args, **kwds)
+Traceback (most recent call last):
+  File "train_cifar_skip_last.py", line 9, in <module>
+    flags.DEFINE_integer('batch_size', 100, 'Batch size.')
+NameError: name 'flags' is not defined

@@ -1,0 +1,8 @@
+/home/s1413927/miniconda3/envs/mlp/lib/python3.6/importlib/_bootstrap.py:219: RuntimeWarning: compiletime version 3.5 of module 'tensorflow.python.framework.fast_tensor_util' does not match runtime version 3.6
+  return f(*args, **kwds)
+Traceback (most recent call last):
+  File "train_cifar_20.py", line 13, in <module>
+    cifar = get_cifar()
+  File "/mnt/mscteach_home/s1413927/nashite/mlpractical/SiameseNetworks/cifar_dataset_20.py", line 66, in get_cifar
+    train.images = np.load(data_path)['inputs']
+IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
