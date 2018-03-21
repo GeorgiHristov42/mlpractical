@@ -18,7 +18,7 @@ class BatchGenerator():
 		random.seed(0)
 		self.labels = labels
 		print(images.shape)
-		im = images.reshape((42500, 3, 32, 32))
+		im = images.reshape((2000, 3, 32, 32))
 		self.images = np.transpose(im, (0, 2, 3, 1))
 		self.tot = len(labels)
 		self.i = 5

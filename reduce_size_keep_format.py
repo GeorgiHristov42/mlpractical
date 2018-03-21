@@ -28,11 +28,10 @@ if len(sys.argv) == 3:
 
     okastren_targets = targets[index_array]
     okastren_inputs = inputs[index_array]
-    ok_panda = pd.DataFrame(okastren_t[okastren_t[:].argsort()])
 
     save_data = {'inputs': okastren_inputs, 'targets': okastren_targets}
 
-    np.save('cifar-100-1shot.npy', save_data)
+    np.save(fn, save_data)
     print("Saving in: ", fn)
 else:
     print("Provide number of samples and filename like:")

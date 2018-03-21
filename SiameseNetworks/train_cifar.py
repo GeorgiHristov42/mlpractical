@@ -8,7 +8,7 @@ from model import *
 
 flags.DEFINE_integer('batch_size', 100, 'Batch size.')
 flags.DEFINE_integer('train_iter', 20000, 'Total training iter')
-flags.DEFINE_integer('step', 100, 'Save after ... iteration')
+flags.DEFINE_integer('step', 10, 'Save after ... iteration')
 
 cifar = get_cifar()
 gen = BatchGenerator(cifar.train.images, cifar.train.labels)
@@ -21,7 +21,7 @@ right = tf.placeholder(tf.float32, [None, 32, 32, 3], name='right')
 with tf.name_scope("similarity"):
 	label = tf.placeholder(tf.int32, [None, 1], name='label') # 1 if same, 0 if different
 	label = tf.to_float(label)
-margin = 0.2
+margin = 1
 
 left_output = mynet(left, reuse=False)
 
@@ -32,7 +32,7 @@ loss = contrastive_loss(left_output, right_output, label, margin)
 global_step = tf.Variable(0, trainable=False)
 
 
-# starter_learning_rate = 0.00001
+# starter_learning_rate = 0.001
 # learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 1000, 0.96, staircase=True)
 # tf.scalar_summary('lr', learning_rate)
 # train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss, global_step=global_step)
