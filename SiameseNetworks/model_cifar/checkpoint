@@ -1,2 +1,0 @@
-model_checkpoint_path: "/mnt/mscteach_home/s1413927/nashite/mlpractical/SiameseNetworks/model_cifar/model.ckpt"
-all_model_checkpoint_paths: "/mnt/mscteach_home/s1413927/nashite/mlpractical/SiameseNetworks/model_cifar/model.ckpt"

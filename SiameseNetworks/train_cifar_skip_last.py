@@ -4,7 +4,7 @@ import tensorflow.contrib.slim as slim
 import os
 
 from cifar_dataset import BatchGenerator, get_cifar
-from model import *
+from model_cifar import *
 
 flags.DEFINE_integer('batch_size', 100, 'Batch size.')
 flags.DEFINE_integer('train_iter', 5000, 'Total training iter')
@@ -21,7 +21,7 @@ right = tf.placeholder(tf.float32, [None, 32, 32, 3], name='right')
 with tf.name_scope("similarity"):
 	label = tf.placeholder(tf.int32, [None, 1], name='label') # 1 if same, 0 if different
 	label = tf.to_float(label)
-margin = 0.2
+margin = 2
 
 left_output = mynet(left, reuse=False)
 
