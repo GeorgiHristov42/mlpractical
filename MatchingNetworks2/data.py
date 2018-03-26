@@ -176,7 +176,7 @@ class MatchingNetworkDatasetParallel(Dataset):
         raise NotImplementedError
 
     def load_image(self, image_path, channels):
-
+        #print('Testing ' + str(image_path))
         image = cv2.imread(image_path)[:, :, :channels]
         image = cv2.resize(image, dsize=(self.image_height, self.image_width))
 

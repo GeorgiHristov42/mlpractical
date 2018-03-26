@@ -21,9 +21,9 @@ experiment_name = "cifar_one_shot_learning_embedding_{}_{}".format(samples_per_c
 # Experiment builder
 data = dataset.FolderDatasetLoader(num_of_gpus=num_gpus, batch_size=batch_size, image_height=32, image_width=32,
                                    image_channels=3,
-                                   train_val_test_split=(80/100, 10/100, 10/100),
+                                   train_val_test_split=(70/100, 15/100, 15/100),
                                    samples_per_iter=1, num_workers=4,
-                                   data_path="datasets/cifar", name="cifar",
+                                   data_path="datasets/cifar100_cut", name="cifar100_cut",
                                    index_of_folder_indicating_class=-2, reset_stored_filepaths=False,
                                    num_samples_per_class=samples_per_class, num_classes_per_set=classes_per_set)
 
@@ -31,10 +31,10 @@ experiment = ExperimentBuilder(data)
 one_shot_omniglot, losses, c_error_opt_op, init = experiment.build_experiment(batch_size,
                                                                                      classes_per_set,
                                                                                      samples_per_class, fce)
-total_epochs = 2
+total_epochs = 100
 total_train_batches = 1000
-total_val_batches = 1000
-total_test_batches = 1000
+total_val_batches = 250
+total_test_batches = 250
 
 saved_models_filepath, logs_filepath = build_experiment_folder(experiment_name)
 
@@ -68,7 +68,7 @@ with tf.Session() as sess:
     best_val_acc_mean = 0.
     best_val_epoch = 6
     with tqdm.tqdm(total=total_epochs) as pbar_e:
-        for e in range(0, total_epochs):
+        for e in range(continue_from_epoch+1, total_epochs):
             total_train_c_loss_mean, total_train_c_loss_std, total_train_accuracy_mean, total_train_accuracy_std =\
                 experiment.run_training_epoch(total_train_batches=total_train_batches,
                                                                                 sess=sess)
