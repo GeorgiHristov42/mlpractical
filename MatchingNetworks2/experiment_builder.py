@@ -71,13 +71,13 @@ class ExperimentBuilder:
                 #some shano code to fix weird bug variables shapes
                 for i in train_sample:
                     # print(i.shape)
-                    if i.shape == (1, 1, 32, 10, 1, 32, 32, 3):
+                    if i.shape == (1, 1, 32, 3, 1, 32, 32, 3):
                         support_set_images = i
                     elif i.shape == (1, 1, 32):
                         target_set_label = i
                     elif i.shape == (1, 1, 32, 32, 32, 3):
                         target_set_image = i
-                    elif i.shape == (1, 1, 32, 10, 1):
+                    elif i.shape == (1, 1, 32, 3, 1):
                         support_set_labels = i
 
                 # print('support_set_labels' + str(support_set_labels.shape))
@@ -125,13 +125,13 @@ class ExperimentBuilder:
 
                 support_set_images, target_set_image, support_set_labels, target_set_label = val_sample
                 for i in val_sample:
-                    if i.shape == (1, 1, 32, 10, 1, 32, 32, 3):
+                    if i.shape == (1, 1, 32, 3, 1, 32, 32, 3):
                         support_set_images = i
                     elif i.shape == (1, 1, 32):
                         target_set_label = i
                     elif i.shape == (1, 1, 32, 32, 32, 3):
                         target_set_image = i
-                    elif i.shape == (1, 1, 32, 10, 1):
+                    elif i.shape == (1, 1, 32, 3, 1):
                         support_set_labels = i
 
                 c_loss_value, acc = sess.run(
@@ -171,13 +171,13 @@ class ExperimentBuilder:
                 support_set_images, target_set_image, support_set_labels, target_set_label = test_sample
 
                 for i in test_sample:
-                    if i.shape == (1, 1, 32, 10, 1, 32, 32, 3):
+                    if i.shape == (1, 1, 32, 3, 1, 32, 32, 3):
                         support_set_images = i
                     elif i.shape == (1, 1, 32):
                         target_set_label = i
                     elif i.shape == (1, 1, 32, 32, 32, 3):
                         target_set_image = i
-                    elif i.shape == (1, 1, 32, 10, 1):
+                    elif i.shape == (1, 1, 32, 3, 1):
                         support_set_labels = i
 
                 c_loss_value, acc = sess.run(
